@@ -1,15 +1,10 @@
 package com.zdd.risk.api;
 
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import com.alibaba.fastjson.serializer.DoubleSerializer;
-import com.zdd.risk.bean.Certification;
 import com.zdd.risk.dao.ICertificationDAO;
 import com.zdd.risk.service.IRModelService;
 import com.zdd.risk.service.IXinyanService;
 import com.zdd.risk.utils.IdCardUtil;
-import org.rosuda.JRI.REXP;
-import org.rosuda.JRI.Rengine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +15,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.io.*;
 import java.math.BigDecimal;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -35,8 +29,6 @@ import java.util.Map;
 public class RmodelController {
     private static final Logger log = LoggerFactory.getLogger(RmodelController.class);
 
-    @Autowired
-    private ICertificationDAO iCertificationDAO;
     @Autowired
     private IRModelService iRModelService;
     @Autowired
@@ -70,8 +62,8 @@ public class RmodelController {
     @RequestMapping(value = "/callModel")
     public JSONObject callModel(String params){
         log.info("callModel接口入参 params= "+params);
-        String  infos="[{\"zm_jianmian\":1000,\"zmscore\":\"Z1( <600 )\",\"real_mianya_ratio\":0.6,\"loans_score\":199,\"latest_three_month\":2,\"loans_credibility\":90,\"sex\":\"male\",\"orderid\":\"123124124\",\"id_card\":\"450703199410121852\",\"apply_score\":189,\"apply_credibility\":84,\"q> ry_org_count\":7,\"query_sum_count\":13,\"loans_org_count\":5,\"latest_one_month_fail\":25,\"loans_credit_limit\":\"1400\",\"consfin_product_count\":\"5\",\"consfin_org_count\":3,\"consfin_max_limit\":5000}]";
-        JSONObject  param = JSONObject.parseObject(infos);
+//        String  infos="[{\"zm_jianmian\":1000,\"zmscore\":\"Z1( <600 )\",\"real_mianya_ratio\":0.6,\"loans_score\":199,\"latest_three_month\":2,\"loans_credibility\":90,\"sex\":\"male\",\"orderid\":\"123124124\",\"id_card\":\"450703199410121852\",\"apply_score\":189,\"apply_credibility\":84,\"q> ry_org_count\":7,\"query_sum_count\":13,\"loans_org_count\":5,\"latest_one_month_fail\":25,\"loans_credit_limit\":\"1400\",\"consfin_product_count\":\"5\",\"consfin_org_count\":3,\"consfin_max_limit\":5000}]";
+        JSONObject  param = JSONObject.parseObject(params);
         JSONObject result = iRModelService.callRJava(param);
         log.info("callModel end");
         return result;
