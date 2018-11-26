@@ -92,7 +92,8 @@ public class Tools {
     public static void main(String [] args){
         String result1="[{\"score\":656.0862,\"advice\":null,\"advice_loan_amt\":2000}]";
         JSONObject result = JSON.parseArray(result1).getJSONObject(0);
-
-        System.out.println(result.getBigDecimal("advice"));
+        String result2="{\"market\": 4000,\"total_deposit\": 800,\"credit_cost\": 60,\"zm_jianmian\": 1000,\"zmscore\": \"Z1( <600 )\",\"orderid\": \"123124124\",\"idcard_no\": \"522627199205170415\",\"realname\": \"陆曙\",\"tel\":\"15801353890\",\"bankcard_no\":\"6464641654\"}";
+        result =JSON.parseObject(result2);
+        System.out.println(result.getBigDecimal("market"));
     }
 }

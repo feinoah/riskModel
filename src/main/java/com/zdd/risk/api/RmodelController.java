@@ -81,7 +81,7 @@ public class RmodelController {
         calculateInfo.put("id_card",param.getString("idcard_no"));
 
         BigDecimal market = param.getBigDecimal("market");
-        if(market!=null && market.compareTo(new BigDecimal(0))>1) {
+        if(market!=null && market.compareTo(new BigDecimal(0))>=1) {
             BigDecimal total_deposit = param.get("total_deposit") != null ? param.getBigDecimal("total_deposit") : new BigDecimal(0);
             BigDecimal credit_cost = param.get("credit_cost") != null ? param.getBigDecimal("credit_cost") : new BigDecimal(0);
             BigDecimal real_mianya_ratio = (market.subtract(total_deposit).add(credit_cost)).divide(market, DEF_DIV_SCALE, BigDecimal.ROUND_HALF_UP);
