@@ -107,7 +107,7 @@ public class RModelServiceImpl implements  IRModelService{
         Map reMap = new HashMap();
         reMap.put("code","100000");
         reMap.put("codeMsg","");
-        if(result!=null) {
+        if(result!=null && result.get("score")!= null) {
             if(result.getDouble("score")>=600) {
                 para = new HashMap();
                 para.put("level", LEVEL_A);

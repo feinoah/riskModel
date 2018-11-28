@@ -96,6 +96,9 @@ public class RmodelController {
         }
         calculateInfo.put("sex", IdCardUtil.getGenderByIdCard(param.getString("idcard_no")));
         JSONObject result = iRModelService.calculateModleData(calculateInfo);
+        if(result!=null) {
+            log.info("calculate 出参result=" + result.toJSONString());
+        }
         log.info("calculate end");
         return result;
     }
