@@ -75,7 +75,9 @@ public class RModelServiceImpl implements  IRModelService{
         log.info("Rpara infos = "+re.eval("infos").asString());
 
         REXP x=re.eval("score_dz(infos)");
+        REXP preloan=re.eval("m_dq_xy_zm(infos)");
         log.info("R result="+ JSON.toJSONString(x));
+        log.info("R preloan-result="+ JSON.toJSONString(preloan));
         if(x!=null && x.getContent()!=null){
 
             Certification record = new Certification();

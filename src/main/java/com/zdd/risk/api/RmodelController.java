@@ -8,6 +8,7 @@ import com.zdd.risk.utils.IdCardUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -72,32 +73,42 @@ public class RmodelController {
     @PostMapping(value = "/calculate")
     public JSONObject calculate(@RequestBody String params){
         log.info("calculate接口入参 params= "+params);
-        JSONObject calculateInfo = xinyanService.getRModelInfoByXinyan(params);
-        JSONObject  param = JSONObject.parseObject(params);
-        calculateInfo.put("zm_jianmian", param.getBigDecimal("zm_jianmian"));
-        calculateInfo.put("zmscore", param.getString("zmscore"));
+        JSONObject result;
+        Map reMap = new HashMap<>();
+        if(!StringUtils.isEmpty(params)) {
 
-        calculateInfo.put("orderid",param.getString("orderid"));
-        calculateInfo.put("id_card",param.getString("idcard_no"));
+            JSONObject param = JSONObject.parseObject(params);
+            JSONObject calculateInfo = xinyanService.getRModelInfoByXinyan(params);
+            if(calculateInfo==null){
+                reMap.put("code", "100003");
+                reMap.put("codeMsg", "xinyan数据为空");
+                return new JSONObject(reMap);
+            }
+            calculateInfo.put("id_card", param.getString("idcard_no"));
+            calculateInfo.putAll(param);
+            BigDecimal market = param.getBigDecimal("market");
+            if (market != null && market.compareTo(new BigDecimal(0)) >= 1) {
+                BigDecimal total_deposit = param.get("total_deposit") != null ? param.getBigDecimal("total_deposit") : new BigDecimal(0);
+                BigDecimal credit_cost = param.get("credit_cost") != null ? param.getBigDecimal("credit_cost") : new BigDecimal(0);
+                BigDecimal real_mianya_ratio = (market.subtract(total_deposit).add(credit_cost)).divide(market, DEF_DIV_SCALE, BigDecimal.ROUND_HALF_UP);
+                calculateInfo.put("real_mianya_ratio", real_mianya_ratio.doubleValue());
+            } else {
 
-        BigDecimal market = param.getBigDecimal("market");
-        if(market!=null && market.compareTo(new BigDecimal(0))>=1) {
-            BigDecimal total_deposit = param.get("total_deposit") != null ? param.getBigDecimal("total_deposit") : new BigDecimal(0);
-            BigDecimal credit_cost = param.get("credit_cost") != null ? param.getBigDecimal("credit_cost") : new BigDecimal(0);
-            BigDecimal real_mianya_ratio = (market.subtract(total_deposit).add(credit_cost)).divide(market, DEF_DIV_SCALE, BigDecimal.ROUND_HALF_UP);
-            calculateInfo.put("real_mianya_ratio", real_mianya_ratio.doubleValue());
+                reMap.put("code", "100001");
+                reMap.put("codeMsg", "market为空");
+                log.info("calculate接口出参 reMap= " + new JSONObject(reMap).toString());
+                log.info("calculate end");
+                return new JSONObject(reMap);
+            }
+            calculateInfo.put("sex", IdCardUtil.getGenderByIdCard(param.getString("idcard_no")));
+            result = iRModelService.calculateModleData(calculateInfo);
+            if (result != null) {
+                log.info("calculate 出参result=" + result.toJSONString());
+            }
         }else{
-            Map reMap = new HashMap<>();
-            reMap.put("code","100001");
-            reMap.put("codeMsg","market为空");
-            log.info("calculate接口出参 reMap= "+new JSONObject(reMap).toString());
-            log.info("calculate end");
+            reMap.put("code", "100002");
+            reMap.put("codeMsg", "入参 params为空");
             return new JSONObject(reMap);
-        }
-        calculateInfo.put("sex", IdCardUtil.getGenderByIdCard(param.getString("idcard_no")));
-        JSONObject result = iRModelService.calculateModleData(calculateInfo);
-        if(result!=null) {
-            log.info("calculate 出参result=" + result.toJSONString());
         }
         log.info("calculate end");
         return result;
