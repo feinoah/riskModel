@@ -74,33 +74,37 @@ public class RmodelController {
     public JSONObject calculate(@RequestBody String params){
         log.info("calculate接口入参 params= "+params);
         JSONObject result;
+        JSONObject calculateInfo =new JSONObject();
         Map reMap = new HashMap<>();
         if(!StringUtils.isEmpty(params)) {
 
             JSONObject param = JSONObject.parseObject(params);
-            JSONObject calculateInfo = xinyanService.getRModelInfoByXinyan(params);
-            if(calculateInfo==null){
-                reMap.put("code", "100003");
-                reMap.put("codeMsg", "xinyan数据为空");
-                return new JSONObject(reMap);
-            }
-            calculateInfo.put("id_card", param.getString("idcard_no"));
-            calculateInfo.putAll(param);
+            param.put("id_card", param.getString("idcard_no"));
             BigDecimal market = param.getBigDecimal("market");
             if (market != null && market.compareTo(new BigDecimal(0)) >= 1) {
                 BigDecimal total_deposit = param.get("total_deposit") != null ? param.getBigDecimal("total_deposit") : new BigDecimal(0);
                 BigDecimal credit_cost = param.get("credit_cost") != null ? param.getBigDecimal("credit_cost") : new BigDecimal(0);
                 BigDecimal real_mianya_ratio = (market.subtract(total_deposit).add(credit_cost)).divide(market, DEF_DIV_SCALE, BigDecimal.ROUND_HALF_UP);
-                calculateInfo.put("real_mianya_ratio", real_mianya_ratio.doubleValue());
+                param.put("real_mianya_ratio", real_mianya_ratio.doubleValue());
             } else {
-
                 reMap.put("code", "100001");
                 reMap.put("codeMsg", "market为空");
                 log.info("calculate接口出参 reMap= " + new JSONObject(reMap).toString());
                 log.info("calculate end");
                 return new JSONObject(reMap);
             }
-            calculateInfo.put("sex", IdCardUtil.getGenderByIdCard(param.getString("idcard_no")));
+            param.put("sex", IdCardUtil.getGenderByIdCard(param.getString("idcard_no")));
+
+            calculateInfo.put("baseInfo",param);
+
+            JSONObject xinyanInfo = xinyanService.getRModelInfoByXinyan(params);
+            if(xinyanInfo == null){
+                reMap.put("code", "100003");
+                reMap.put("codeMsg", "xinyan数据为空");
+            }else{
+                calculateInfo.put("xinyanInfo",xinyanInfo);
+            }
+
             result = iRModelService.calculateModleData(calculateInfo);
             if (result != null) {
                 log.info("calculate 出参result=" + result.toJSONString());

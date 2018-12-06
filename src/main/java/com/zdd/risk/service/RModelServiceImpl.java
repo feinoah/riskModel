@@ -59,13 +59,14 @@ public class RModelServiceImpl implements  IRModelService{
             re.eval("library(jsonlite)");
             re.eval("library(RSQLite)");
             re.eval("library(log4r)");
+            re.eval("source('/usr/src/dq_dz_model.R')");
         }
     }
 
     @Override
     public JSONObject callRJava(JSONObject paramJson){
         JSONObject result = new JSONObject();
-        String infos =new StringBuffer("[").append(paramJson.toJSONString()).append("]").toString();
+        String infos =new StringBuffer("").append(paramJson.toJSONString()).append("").toString();
         log.info("java.library.path====="+System.getProperty("java.library.path"));
 
         String version =re.eval("R.version.string").asString();
@@ -74,8 +75,8 @@ public class RModelServiceImpl implements  IRModelService{
         re.assign("infos",infos);
         log.info("Rpara infos = "+re.eval("infos").asString());
 
-        REXP x=re.eval("score_dz(infos)");
-        REXP preloan=re.eval("m_dq_xy_zm(infos)");
+        REXP x=re.eval("score_Fun(infos,str_dz,str_amt,.8)");
+        REXP preloan=re.eval("score_Fun(infos,str_dq,str_amt,.8)");
         log.info("R result="+ JSON.toJSONString(x));
         log.info("R preloan-result="+ JSON.toJSONString(preloan));
         if(x!=null && x.getContent()!=null){
