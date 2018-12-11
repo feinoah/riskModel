@@ -8,7 +8,9 @@ import com.alibaba.fastjson.JSONObject;
  */
 public interface IRModelService {
 
-    JSONObject callRJava(JSONObject paramJson);
 
-    JSONObject calculateModleData(JSONObject paramJson);
+    JSONObject callRJava(JSONObject paramJson, String type);
+
+    JSONObject calculateModleData(String params, String type);
+
 }

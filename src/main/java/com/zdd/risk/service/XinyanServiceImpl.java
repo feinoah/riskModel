@@ -2,10 +2,14 @@ package com.zdd.risk.service;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.zdd.risk.bean.Certification;
+import com.zdd.risk.bean.CertificationExample;
+import com.zdd.risk.dao.ICertificationDAO;
 import com.zdd.risk.utils.*;
 import com.zdd.risk.utils.rsa.RsaCodingUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -16,11 +20,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Properties;
 
 /**
  * @author 租无忧科技有限公司
@@ -40,6 +41,8 @@ public class XinyanServiceImpl implements  IXinyanService{
     private String pfxPwd;
     @Value("${radar.url}")
     private String radarUrl;
+    @Autowired
+    private ICertificationDAO iCertificationDAO;
 
     @Override
     public JSONObject getXinyanInfo(String param){
@@ -141,62 +144,46 @@ public class XinyanServiceImpl implements  IXinyanService{
 
     @Override
     public JSONObject getRModelInfoByXinyan(String param){
-        JSONObject outputJson = getXinyanInfo(param);
-        Map xinyanMap = new HashMap();
-        xinyanMap.put("consfin_product_count", "null");
-        xinyanMap.put("consfin_max_limit", "null");
-        xinyanMap.put("loans_credit_limit", "null");
-        xinyanMap.put("latest_three_month", "null");
-        xinyanMap.put("latest_one_month_fail", "null");
-        xinyanMap.put("loans_org_count", "null");
-        xinyanMap.put("loans_score", "null");
-        xinyanMap.put("loans_credibility", "null");
-        xinyanMap.put("query_sum_count", "null");
-        xinyanMap.put("apply_credibility", "null");
-        xinyanMap.put("query_org_count", "null");
-        xinyanMap.put("apply_score", "null");
-        if(outputJson.getBoolean("success")) {
-            JSONObject data = outputJson.getJSONObject("data");
-            String code = data.getString("code");
-            if ("0".equals(code)) {
-                JSONObject result_detail = data.getJSONObject("result_detail");
-                JSONObject current_report_detail = result_detail.getJSONObject("current_report_detail");
-                JSONObject behavior_report_detail = result_detail.getJSONObject("behavior_report_detail");
-                JSONObject apply_report_detail = result_detail.getJSONObject("apply_report_detail");
-                if (current_report_detail != null) {
-                    xinyanMap.put("consfin_product_count", current_report_detail.getString("consfin_product_count")
-                            != null ? Integer.parseInt(current_report_detail.getString("consfin_product_count")) : "null");
-                    xinyanMap.put("consfin_max_limit", current_report_detail.getString("consfin_max_limit")
-                            != null ? Integer.parseInt(current_report_detail.getString("consfin_max_limit")) : "null");
-                    xinyanMap.put("loans_credit_limit", current_report_detail.getString("loans_credit_limit")
-                            != null ? Integer.parseInt(current_report_detail.getString("loans_credit_limit")) : "null");
-                }
-                if (behavior_report_detail != null) {
-                    xinyanMap.put("latest_three_month", behavior_report_detail.getString("latest_three_month")
-                            != null ? Integer.parseInt(behavior_report_detail.getString("latest_three_month")) : "null");
-                    xinyanMap.put("latest_one_month_fail", behavior_report_detail.getString("latest_one_month_fail")
-                            != null ? Integer.parseInt(behavior_report_detail.getString("latest_one_month_fail")) : "null");
-                    xinyanMap.put("loans_org_count", behavior_report_detail.getString("loans_org_count")
-                            != null ? Integer.parseInt(behavior_report_detail.getString("loans_org_count")) : "null");
-                    xinyanMap.put("loans_score", behavior_report_detail.getString("loans_score")
-                            != null ? Integer.parseInt(behavior_report_detail.getString("loans_score")) : "null");
-                    xinyanMap.put("loans_credibility", behavior_report_detail.getString("loans_credibility")
-                            != null ? Integer.parseInt(behavior_report_detail.getString("loans_credibility")) : "null");
-                }
-                if (apply_report_detail != null) {
-                    xinyanMap.put("query_sum_count", apply_report_detail.getString("query_sum_count")
-                            != null ? Integer.parseInt(apply_report_detail.getString("query_sum_count")) : "null");
-                    xinyanMap.put("apply_credibility", apply_report_detail.getString("apply_credibility")
-                            != null ? Integer.parseInt(apply_report_detail.getString("apply_credibility")) : "null");
-                    xinyanMap.put("query_org_count", apply_report_detail.getString("query_org_count")
-                            != null ? Integer.parseInt(apply_report_detail.getString("query_org_count")) : "null");
-                    xinyanMap.put("apply_score", apply_report_detail.getString("apply_score")
-                            != null ? Integer.parseInt(apply_report_detail.getString("apply_score")) : "null");
+        JSONObject outputJson = new JSONObject();
+        JSONObject inputParams = JSONObject.parseObject(param);
+        if(!StringUtils.isEmpty(param)) {
+            String idcard= inputParams.getString("idcard_no");
+            String mobile= inputParams.getString("tel")!=null?inputParams.getString("tel"):"";
+
+            CertificationExample example = new CertificationExample();
+            CertificationExample.Criteria criteria = example.createCriteria();
+            criteria.andIdCardEqualTo(idcard);
+            criteria.andMobileEqualTo(mobile);
+            criteria.andCertificationTypeEqualTo(String.valueOf(4));
+            criteria.andFlagEqualTo(0);
+            List<Certification> certificationList= iCertificationDAO.selectByExampleWithBLOBs(example);
+            if(certificationList != null && certificationList.size()>0) {
+                String detailDtoData = certificationList.get(0).getCertificationResult();
+                outputJson = JSONObject.parseObject(detailDtoData);
+            }else {
+                outputJson = getXinyanInfo(param);
+
+                if (outputJson.getBoolean("success")) {
+                    JSONObject data = outputJson.getJSONObject("data");
+                    String code = data.getString("code");
+                    if ("0".equals(code)) {
+                        Certification record = new Certification();
+                        record.setIdCard(idcard);
+                        record.setMobile(mobile);
+                        record.setCertificationType(String.valueOf(4));
+                        record.setCertificationItem(param);
+                        record.setCertificationResult(JSON.toJSONString(data));
+                        record.setCertificationLimit(new Date());
+                        record.setFlag(0);
+                        record.setCreatTime(new Date());
+
+                        iCertificationDAO.insert(record);
+                    }
+                } else {
+                    log("新颜数据返回异常：" + outputJson.toJSONString());
                 }
             }
-        }else{
-            log("新颜数据返回异常：" + outputJson.toJSONString());
         }
-        return new JSONObject(xinyanMap);
+        return outputJson;
     }
 }
