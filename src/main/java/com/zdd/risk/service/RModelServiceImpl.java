@@ -84,17 +84,17 @@ public class RModelServiceImpl implements  IRModelService{
 
         REXP x= new REXP();
         if("loan".equals(type)) {
-            x = re.eval("scoreFun(infos,str_dz,str_amt,.8,600)");
+            x = re.eval("scoreFun(infos,str_dz,str_amt)");
         }else {
-            x = re.eval("scoreFun(infos,str_dq,str_amt,.8,600)");
+            x = re.eval("scoreFun(infos,str_dq,str_amt)");
         }
         log.info("loantype= ["+type+"] R result="+ JSON.toJSONString(x));
 
         if(x!=null && x.getContent()!=null){
 
             Certification record = new Certification();
-            record.setIdCard(paramJson.getString("id_card"));
-            record.setMobile(paramJson.getString("tel"));
+            record.setIdCard(paramJson.getJSONObject("baseInfo").getString("id_card"));
+            record.setMobile(paramJson.getJSONObject("baseInfo").getString("tel"));
             record.setCertificationType(String.valueOf(1));
             record.setCertificationItem(infos.length()<1000?infos:infos.substring(0,1000)+"...");
             record.setCertificationResult(JSON.toJSONString(x.getContent()));
@@ -185,7 +185,8 @@ public class RModelServiceImpl implements  IRModelService{
         reMap.put("codeMsg","");
         if(result!=null && result.get("score")!= null) {
             Double final_amt = result.getDouble("final_amt");
-            if(result.getDouble("score")>=600) {
+            Integer advice = result.getInteger("advice");
+            if(result.getDouble("score")>=600 && "1".equals(String.valueOf(advice))) {
                 para = new HashMap();
                 para.put("level", LEVEL_A);
                 para.put("approveCredit", final_amt);

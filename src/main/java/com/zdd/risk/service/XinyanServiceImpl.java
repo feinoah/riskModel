@@ -156,6 +156,7 @@ public class XinyanServiceImpl implements  IXinyanService{
             criteria.andMobileEqualTo(mobile);
             criteria.andCertificationTypeEqualTo(String.valueOf(4));
             criteria.andFlagEqualTo(0);
+            example.setOrderByClause("creatTime DESC");
             List<Certification> certificationList= iCertificationDAO.selectByExampleWithBLOBs(example);
             if(certificationList != null && certificationList.size()>0) {
                 String detailDtoData = certificationList.get(0).getCertificationResult();
